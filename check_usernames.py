@@ -1,91 +1,93 @@
-import requests
-import time
+import asyncio
+import aiohttp
 import string
 import itertools
-import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# GET endpoint — no CSRF token required, works reliably
-CHECK_URL = "https://api.roblox.com/users/get-by-username?username={}"
+# --- platform config (change these for other platforms) ---
+PLATFORM_NAME          = "Roblox"
+CHECK_URL              = "https://api.roblox.com/users/get-by-username?username={}"
+USERNAME_LENGTH        = 4
+CHARS                  = string.ascii_lowercase + string.digits
+SPECIAL_CHARS          = ""     # e.g. "._" for Discord-like platforms
+ALLOW_SPECIAL_AT_ENDS  = False  # set True if the platform allows special chars at start/end
 
-MAX_WORKERS = 20
-REQUEST_DELAY = 0.05
+def parse_response(data: dict) -> bool:
+    return "Id" not in data
+
+# ----------------------------------------------------------
+
+CONCURRENCY = 200
 RETRY_DELAY = 5.0
-BATCH_SIZE = 200
+BATCH_SIZE  = 1000
 
-_local = threading.local()
-
-def get_session() -> requests.Session:
-    if not hasattr(_local, "session"):
-        _local.session = requests.Session()
-    return _local.session
-
-lock = threading.Lock()
 available: list[str] = []
 checked = 0
 
 
-def check_username(username: str) -> tuple[str, bool]:
-    for attempt in range(3):
-        try:
-            resp = get_session().get(CHECK_URL.format(username), timeout=10)
-            if resp.status_code == 200:
-                data = resp.json()
-                is_available = "Id" not in data
-                return username, is_available
-            if resp.status_code == 429:
-                time.sleep(RETRY_DELAY * (attempt + 1))
-                continue
-            return username, False
-        except requests.RequestException:
-            time.sleep(1)
-    return username, False
-
-
-def worker(username: str) -> tuple[str, bool]:
-    result = check_username(username)
-    time.sleep(REQUEST_DELAY)
-    return result
+async def check_username(session: aiohttp.ClientSession, sem: asyncio.Semaphore, username: str) -> tuple[str, bool]:
+    async with sem:
+        for attempt in range(3):
+            try:
+                async with session.get(CHECK_URL.format(username), timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        return username, parse_response(data)
+                    if resp.status == 429:
+                        await asyncio.sleep(RETRY_DELAY * (attempt + 1))
+                        continue
+                    return username, False
+            except Exception:
+                await asyncio.sleep(1)
+        return username, False
 
 
 def username_generator():
-    chars = string.ascii_lowercase + string.digits
-    for combo in itertools.product(chars, repeat=4):
-        yield "".join(combo)
+    all_chars = CHARS + SPECIAL_CHARS
+    if not SPECIAL_CHARS or ALLOW_SPECIAL_AT_ENDS:
+        for combo in itertools.product(all_chars, repeat=USERNAME_LENGTH):
+            yield "".join(combo)
+    else:
+        middle_len = USERNAME_LENGTH - 2
+        for first in CHARS:
+            for middle in itertools.product(all_chars, repeat=middle_len):
+                for last in CHARS:
+                    yield first + "".join(middle) + last
 
 
-def main() -> None:
+async def main() -> None:
     global checked
 
-    chars = string.ascii_lowercase + string.digits
-    total = len(chars) ** 4
+    all_chars = CHARS + SPECIAL_CHARS
+    if not SPECIAL_CHARS or ALLOW_SPECIAL_AT_ENDS:
+        total = len(all_chars) ** USERNAME_LENGTH
+    else:
+        middle_len = USERNAME_LENGTH - 2
+        total = len(CHARS) ** 2 * len(all_chars) ** middle_len
 
-    print("Roblox 4-Character Username Checker")
+    print(f"{PLATFORM_NAME} {USERNAME_LENGTH}-character username checker")
     print("=" * 45)
-    print(f"Total combinations : {total:,}  (a-z + 0-9, length 4)")
-    print(f"Threads            : {MAX_WORKERS}")
+    print(f"Total combinations : {total:,}")
+    print(f"Concurrency        : {CONCURRENCY}")
     print(f"Press Ctrl+C to stop early\n")
 
-    gen = username_generator()
-    try:
-        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-            while True:
-                batch = list(itertools.islice(gen, BATCH_SIZE))
-                if not batch:
-                    break
+    sem = asyncio.Semaphore(CONCURRENCY)
+    connector = aiohttp.TCPConnector(limit=CONCURRENCY)
 
-                futures = {executor.submit(worker, u): u for u in batch}
-                for future in as_completed(futures):
-                    username, is_available = future.result()
-                    with lock:
-                        checked += 1
-                        if is_available:
-                            available.append(username)
-                        status = "AVAILABLE" if is_available else "taken"
-                        print(f"  [{status:9s}] {username}  ({checked:,} checked)")
+    async with aiohttp.ClientSession(connector=connector) as session:
+        gen = username_generator()
+        while True:
+            batch = list(itertools.islice(gen, BATCH_SIZE))
+            if not batch:
+                break
 
-    except KeyboardInterrupt:
-        print("\nStopped early.")
+            results = await asyncio.gather(*[check_username(session, sem, u) for u in batch])
+
+            for username, is_available in results:
+                checked += 1
+                if is_available:
+                    available.append(username)
+                status = "AVAILABLE" if is_available else "taken"
+                print(f"  [{status:9s}] {username}  ({checked:,} checked)")
 
     print(f"\n{'=' * 45}")
     print(f"Checked  : {checked:,}")
@@ -103,4 +105,12 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\nStopped early.")
+        if available:
+            out_path = "available_usernames.txt"
+            with open(out_path, "w") as f:
+                f.write("\n".join(sorted(available)) + "\n")
+            print(f"Saved {len(available)} available username(s) to {out_path}")
