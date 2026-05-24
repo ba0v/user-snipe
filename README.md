@@ -19,7 +19,7 @@ results are printed to the terminal in real time. any available usernames are sa
 
 - checks all combinations concurrently for maximum speed
 - saves progress to `checkpoint.txt` after every batch. if the script stops, it resumes where it left off automatically
-- sends a discord notification the moment an available username is found
+- sends a discord notification the moment an available username is found (for the mods)
 - supports proxy rotation to avoid rate limits
 
 ## configuration
@@ -29,12 +29,12 @@ edit the platform config block at the top of `check_usernames.py`:
 | setting | description |
 |---|---|
 | `PLATFORM_NAME` | display name shown in the output |
-| `CHECK_URL` | api endpoint — use `{}` where the username goes |
+| `CHECK_URL` | api endpoint, use `{}` where the username goes |
 | `USERNAME_LENGTH` | how many characters to check |
 | `CHARS` | base allowed characters (e.g. a–z + 0–9) |
-| `SPECIAL_CHARS` | extra characters like `.` and `_` — leave empty if the platform doesn't allow them |
+| `SPECIAL_CHARS` | extra characters like `.` and `_`, leave empty if the platform doesn't allow them |
 | `ALLOW_SPECIAL_AT_ENDS` | set to `True` if special characters are allowed at the start and end of a username |
-| `PROXIES` | list of proxy urls to rotate through — leave empty to disable |
+| `PROXIES` | list of proxy urls to rotate through, leave empty to disable |
 | `DISCORD_WEBHOOK` | paste your discord webhook url here to get pinged when a username is found |
 
 also update `parse_response` to match the platform's json response:
