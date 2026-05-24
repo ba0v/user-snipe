@@ -15,10 +15,10 @@ python check_usernames.py
 
 results are printed to the terminal in real time. any available usernames are saved to `available_usernames.txt` when the run finishes or if you stop early with ctrl+c.
 
-## features
+## cool features
 
 - checks all combinations concurrently for maximum speed
-- saves progress to `checkpoint.txt` after every batch — if the script stops, it resumes where it left off automatically
+- saves progress to `checkpoint.txt` after every batch. if the script stops, it resumes where it left off automatically
 - sends a discord notification the moment an available username is found
 - supports proxy rotation to avoid rate limits
 
@@ -70,7 +70,7 @@ def parse_response(data: dict) -> bool:
 
 ## rate limits
 
-rate limits vary by platform — do your own research on the platform's api limits before running this tool to avoid getting blocked.
+rate limits vary by platform; do your own research on the platform's api limits before running this tool to avoid getting blocked.
 
 ## disclaimer
 
@@ -79,3 +79,4 @@ this tool interacts with platform apis. by using it, you acknowledge that:
 - you are solely responsible for any consequences, including account bans, suspensions, or violations of a platform's terms of service
 - the author is not responsible for any bans, penalties, or legal action resulting from the use of this tool
 - use it at your own risk
+- script takes around 2-4 hours to complete, but rate limits can delay this severely if you don't have proxies
