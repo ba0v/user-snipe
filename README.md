@@ -1,6 +1,6 @@
-# username checker
+# username sniper
 
-checks all possible combinations of short usernames against a platform's api and saves any available ones to a file. defaults to roblox 4-character usernames (a–z + 0–9), but can be configured for any platform.
+checks all possible combinations of short usernames against a platform's api and saves any available ones to a txt file. defaults to roblox 4-character usernames (a–z + 0–9), but can be configured for any platform.
 
 ## requirements
 
@@ -37,11 +37,11 @@ def parse_response(data: dict) -> bool:
 
 ## examples
 
-**roblox** (default)
+**roblox** (default, all taken don't waste your time)
 ```python
 PLATFORM_NAME         = "Roblox"
 CHECK_URL             = "https://api.roblox.com/users/get-by-username?username={}"
-SPECIAL_CHARS         = ""
+SPECIAL_CHARS         = "_"
 ALLOW_SPECIAL_AT_ENDS = False
 
 def parse_response(data: dict) -> bool:
@@ -53,7 +53,7 @@ def parse_response(data: dict) -> bool:
 PLATFORM_NAME         = "Discord"
 CHECK_URL             = "https://..."  # replace with correct endpoint
 SPECIAL_CHARS         = "._"
-ALLOW_SPECIAL_AT_ENDS = False
+ALLOW_SPECIAL_AT_ENDS = True
 
 def parse_response(data: dict) -> bool:
     return True  # update to match discord's response format
@@ -63,6 +63,10 @@ def parse_response(data: dict) -> bool:
 
 this tool interacts with platform apis. by using it, you acknowledge that:
 
-- you are solely responsible for any consequences, including account bans, suspensions, or violations of a platform's terms of service
-- the author is not responsible for any bans, penalties, or legal action resulting from the use of this tool
+- **YOU** are solely responsible for any consequences, including account bans, suspensions, or violations of a platform's terms of service
+- the author (ba0v) is not responsible for **ANY** bans, penalties, or legal action resulting from the use of this tool
 - use it at your own risk
+- rate limits vary by platform — do your own research on the platform's api limits before running this tool to avoid such consequences
+```
+
+## if this helped you get a clean username, consider donating!
