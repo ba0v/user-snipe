@@ -34,4 +34,33 @@ also update `parse_response` to match the platform's json response:
 def parse_response(data: dict) -> bool:
     return True  # return True if the username is available, False if taken
 
+## examples
+roblox (default)
 
+
+PLATFORM_NAME         = "Roblox"
+CHECK_URL             = "https://api.roblox.com/users/get-by-username?username={}"
+SPECIAL_CHARS         = ""
+ALLOW_SPECIAL_AT_ENDS = False
+discord
+
+
+PLATFORM_NAME         = "Discord"
+CHECK_URL             = "https://..."  # replace with correct endpoint
+SPECIAL_CHARS         = "._"
+ALLOW_SPECIAL_AT_ENDS = False
+
+discord
+
+
+PLATFORM_NAME         = "Discord"
+CHECK_URL             = "https://..."  # replace with correct endpoint
+SPECIAL_CHARS         = "._"
+ALLOW_SPECIAL_AT_ENDS = False
+
+disclaimer
+this tool interacts with platform apis. by using it, you acknowledge that:
+
+you are solely responsible for any consequences, including account bans, suspensions, or violations of a platform's terms of service
+the author is not responsible for any bans, penalties, or legal action resulting from the use of this tool
+use it at your own risk
