@@ -2,6 +2,8 @@ import asyncio
 import aiohttp
 import string
 import itertools
+import os
+import time
 
 # --- platform config (change these for other platforms) ---
 PLATFORM_NAME          = "Roblox"
@@ -16,19 +18,42 @@ def parse_response(data: dict) -> bool:
 
 # ----------------------------------------------------------
 
-CONCURRENCY = 200
-RETRY_DELAY = 5.0
-BATCH_SIZE  = 1000
+CONCURRENCY      = 200
+RETRY_DELAY      = 5.0
+BATCH_SIZE       = 1000
+PROXIES          = []   # e.g. ["http://user:pass@host:port", ...]
+DISCORD_WEBHOOK  = ""   # paste your Discord webhook URL here
+
+CHECKPOINT_FILE  = "checkpoint.txt"
+OUTPUT_FILE      = "available_usernames.txt"
 
 available: list[str] = []
 checked = 0
+_proxy_iter = itertools.cycle(PROXIES) if PROXIES else None
+
+
+def get_proxy() -> str | None:
+    return next(_proxy_iter) if _proxy_iter else None
+
+
+async def notify_discord(session: aiohttp.ClientSession, username: str) -> None:
+    if not DISCORD_WEBHOOK:
+        return
+    try:
+        await session.post(DISCORD_WEBHOOK, json={"content": f"available username found: **{username}**"})
+    except Exception:
+        pass
 
 
 async def check_username(session: aiohttp.ClientSession, sem: asyncio.Semaphore, username: str) -> tuple[str, bool]:
     async with sem:
         for attempt in range(3):
             try:
-                async with session.get(CHECK_URL.format(username), timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                async with session.get(
+                    CHECK_URL.format(username),
+                    timeout=aiohttp.ClientTimeout(total=10),
+                    proxy=get_proxy(),
+                ) as resp:
                     if resp.status == 200:
                         data = await resp.json()
                         return username, parse_response(data)
@@ -54,6 +79,20 @@ def username_generator():
                     yield first + "".join(middle) + last
 
 
+def load_checkpoint() -> int:
+    if os.path.exists(CHECKPOINT_FILE):
+        try:
+            return int(open(CHECKPOINT_FILE).read().strip())
+        except ValueError:
+            pass
+    return 0
+
+
+def save_checkpoint(index: int) -> None:
+    with open(CHECKPOINT_FILE, "w") as f:
+        f.write(str(index))
+
+
 async def main() -> None:
     global checked
 
@@ -64,17 +103,26 @@ async def main() -> None:
         middle_len = USERNAME_LENGTH - 2
         total = len(CHARS) ** 2 * len(all_chars) ** middle_len
 
+    start_index = load_checkpoint()
+    checked = start_index
+
     print(f"{PLATFORM_NAME} {USERNAME_LENGTH}-character username checker")
     print("=" * 45)
-    print(f"Total combinations : {total:,}")
-    print(f"Concurrency        : {CONCURRENCY}")
-    print(f"Press Ctrl+C to stop early\n")
+    print(f"total combinations : {total:,}")
+    print(f"concurrency        : {CONCURRENCY}")
+    if start_index:
+        print(f"resuming from      : {start_index:,}")
+    print(f"press ctrl+c to stop early\n")
 
     sem = asyncio.Semaphore(CONCURRENCY)
     connector = aiohttp.TCPConnector(limit=CONCURRENCY)
+    start_time = time.monotonic()
 
     async with aiohttp.ClientSession(connector=connector) as session:
         gen = username_generator()
+        if start_index:
+            next(itertools.islice(gen, start_index, start_index), None)
+
         while True:
             batch = list(itertools.islice(gen, BATCH_SIZE))
             if not batch:
@@ -86,31 +134,37 @@ async def main() -> None:
                 checked += 1
                 if is_available:
                     available.append(username)
+                    asyncio.create_task(notify_discord(session, username))
+                    with open(OUTPUT_FILE, "a") as f:
+                        f.write(username + "\n")
+
+                elapsed = time.monotonic() - start_time
+                rate = (checked - start_index) / elapsed if elapsed > 0 else 0
+                remaining = (total - checked) / rate if rate > 0 else 0
+                eta = f"{int(remaining // 3600)}h {int((remaining % 3600) // 60)}m" if rate > 0 else "?"
+                pct = checked / total * 100
                 status = "AVAILABLE" if is_available else "taken"
-                print(f"  [{status:9s}] {username}  ({checked:,} checked)")
+                print(f"  [{status:9s}] {username}  ({pct:.1f}% — {checked:,}/{total:,} — eta {eta})")
+
+            save_checkpoint(checked)
+
+    if os.path.exists(CHECKPOINT_FILE):
+        os.remove(CHECKPOINT_FILE)
 
     print(f"\n{'=' * 45}")
-    print(f"Checked  : {checked:,}")
-    print(f"Available: {len(available)}")
+    print(f"checked  : {checked:,}")
+    print(f"available: {len(available)}")
 
     if available:
-        print("\nAvailable usernames:")
+        print("\navailable usernames:")
         for name in sorted(available):
             print(f"  {name}")
-
-        out_path = "available_usernames.txt"
-        with open(out_path, "w") as f:
-            f.write("\n".join(sorted(available)) + "\n")
-        print(f"\nSaved to {out_path}")
 
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\nStopped early.")
+        print("\nstopped early.")
         if available:
-            out_path = "available_usernames.txt"
-            with open(out_path, "w") as f:
-                f.write("\n".join(sorted(available)) + "\n")
-            print(f"Saved {len(available)} available username(s) to {out_path}")
+            print(f"{len(available)} available username(s) saved to {OUTPUT_FILE}")
