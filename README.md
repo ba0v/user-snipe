@@ -67,6 +67,5 @@ this tool interacts with platform apis. by using it, you acknowledge that:
 - the author (ba0v) is not responsible for **ANY** bans, penalties, or legal action resulting from the use of this tool
 - use it at your own risk
 - rate limits vary by platform — do your own research on the platform's api limits before running this tool to avoid such consequences
-```
 
-## if this helped you get a clean username, consider donating!
+## if this helped you get a clean username, consider donating! (still verifying it wait)
