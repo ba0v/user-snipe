@@ -1,6 +1,6 @@
-# username sniper
+# username checker
 
-checks all possible combinations of short usernames against a platform's api and saves any available ones to a txt file. defaults to roblox 4-character usernames (a–z + 0–9), but can be configured for any platform.
+checks all possible combinations of short usernames against a platform's api and saves any available ones to a file. defaults to roblox 4-character usernames (a–z + 0–9), but can be configured for any platform.
 
 ## requirements
 
@@ -15,6 +15,13 @@ python check_usernames.py
 
 results are printed to the terminal in real time. any available usernames are saved to `available_usernames.txt` when the run finishes or if you stop early with ctrl+c.
 
+## features
+
+- checks all combinations concurrently for maximum speed
+- saves progress to `checkpoint.txt` after every batch — if the script stops, it resumes where it left off automatically
+- sends a discord notification the moment an available username is found
+- supports proxy rotation to avoid rate limits
+
 ## configuration
 
 edit the platform config block at the top of `check_usernames.py`:
@@ -27,6 +34,8 @@ edit the platform config block at the top of `check_usernames.py`:
 | `CHARS` | base allowed characters (e.g. a–z + 0–9) |
 | `SPECIAL_CHARS` | extra characters like `.` and `_` — leave empty if the platform doesn't allow them |
 | `ALLOW_SPECIAL_AT_ENDS` | set to `True` if special characters are allowed at the start and end of a username |
+| `PROXIES` | list of proxy urls to rotate through — leave empty to disable |
+| `DISCORD_WEBHOOK` | paste your discord webhook url here to get pinged when a username is found |
 
 also update `parse_response` to match the platform's json response:
 
@@ -37,11 +46,11 @@ def parse_response(data: dict) -> bool:
 
 ## examples
 
-**roblox** (default, all taken don't waste your time)
+**roblox** (default)
 ```python
 PLATFORM_NAME         = "Roblox"
 CHECK_URL             = "https://api.roblox.com/users/get-by-username?username={}"
-SPECIAL_CHARS         = "_"
+SPECIAL_CHARS         = ""
 ALLOW_SPECIAL_AT_ENDS = False
 
 def parse_response(data: dict) -> bool:
@@ -53,19 +62,20 @@ def parse_response(data: dict) -> bool:
 PLATFORM_NAME         = "Discord"
 CHECK_URL             = "https://..."  # replace with correct endpoint
 SPECIAL_CHARS         = "._"
-ALLOW_SPECIAL_AT_ENDS = True
+ALLOW_SPECIAL_AT_ENDS = False
 
 def parse_response(data: dict) -> bool:
     return True  # update to match discord's response format
 ```
 
+## rate limits
+
+rate limits vary by platform — do your own research on the platform's api limits before running this tool to avoid getting blocked.
+
 ## disclaimer
 
 this tool interacts with platform apis. by using it, you acknowledge that:
 
-- **YOU** are solely responsible for any consequences, including account bans, suspensions, or violations of a platform's terms of service
-- the author (ba0v) is not responsible for **ANY** bans, penalties, or legal action resulting from the use of this tool
+- you are solely responsible for any consequences, including account bans, suspensions, or violations of a platform's terms of service
+- the author is not responsible for any bans, penalties, or legal action resulting from the use of this tool
 - use it at your own risk
-- rate limits vary by platform — do your own research on the platform's api limits before running this tool to avoid such consequences
-
-## if this helped you get a clean username, consider donating! (still verifying it wait)
