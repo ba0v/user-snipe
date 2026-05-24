@@ -46,7 +46,7 @@ def parse_response(data: dict) -> bool:
 
 ## examples
 
-**roblox** (default)
+**roblox** (default. all taken, don't waste ya time)
 ```python
 PLATFORM_NAME         = "Roblox"
 CHECK_URL             = "https://api.roblox.com/users/get-by-username?username={}"
