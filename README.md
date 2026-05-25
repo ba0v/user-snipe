@@ -62,7 +62,7 @@ def parse_response(data: dict) -> bool:
 PLATFORM_NAME         = "Discord"
 CHECK_URL             = "https://..."  # replace with correct endpoint
 SPECIAL_CHARS         = "._"
-ALLOW_SPECIAL_AT_ENDS = False
+ALLOW_SPECIAL_AT_ENDS = True
 
 def parse_response(data: dict) -> bool:
     return True  # update to match discord's response format
