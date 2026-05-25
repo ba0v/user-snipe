@@ -77,7 +77,7 @@ rate limits vary by platform; do your own research on the platform's api limits 
 this tool interacts with platform apis. by using it, you acknowledge that:
 
 - you are solely responsible for any consequences, including account bans, suspensions, or violations of a platform's terms of service
-- the author is not responsible for any bans, penalties, or legal action resulting from the use of this tool
+- the author (ba0v) is not responsible for any bans, penalties, or legal action resulting from the use of this tool
 - use it at your own risk
 - script takes around 2-4 hours to complete, but rate limits can delay this severely if you don't have proxies
 
