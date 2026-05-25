@@ -1,6 +1,6 @@
 # username sniper
 
-checks all possible combinations of short usernames against a platform's api and saves any available ones to a file. defaults to roblox 4-character usernames (a–z + 0–9), but can be configured for **any platform**.
+checks all possible combinations of short usernames against a platform's api and saves any available ones to a file. defaults to roblox 4-character usernames (a–z + 0–9), but can be configured for any platform.
 
 ## requirements
 
@@ -44,13 +44,21 @@ def parse_response(data: dict) -> bool:
     return True  # return True if the username is available, False if taken
 ```
 
+to find the right check, test the api manually in your browser or a tool like postman. call the endpoint with a username you know is taken and one you know is available, then look at what's different in the json response.
+
+for example, roblox returns:
+- taken: `{"Id": 123456, "Username": "abc"}`
+- available: `{"errorMessage": "User not found"}`
+
+so the check becomes `return "Id" not in data`. every platform is different — just find the pattern.
+
 ## examples
 
 **roblox** (default. all taken, don't waste ya time)
 ```python
 PLATFORM_NAME         = "Roblox"
 CHECK_URL             = "https://api.roblox.com/users/get-by-username?username={}"
-SPECIAL_CHARS         = ""
+SPECIAL_CHARS         = "_"
 ALLOW_SPECIAL_AT_ENDS = False
 
 def parse_response(data: dict) -> bool:
@@ -83,5 +91,5 @@ this tool interacts with platform apis. by using it, you acknowledge that:
 
 ## if this helped you get a clean username, consider donating!
 ```
-buymeacoffee.com/ba0v
+https://buymeacoffee.com/ba0v
 ```
