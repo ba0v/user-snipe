@@ -1,6 +1,6 @@
 # username sniper
 
-checks all possible combinations of short usernames against a platform's api and saves any available ones to a file. defaults to roblox 4-character usernames (a–z + 0–9), but can be configured for **any platform"*.
+checks all possible combinations of short usernames against a platform's api and saves any available ones to a file. defaults to roblox 4-character usernames (a–z + 0–9), but can be configured for **any platform**.
 
 ## requirements
 
