@@ -50,7 +50,7 @@ for example, roblox returns:
 - taken: `{"Id": 123456, "Username": "abc"}`
 - available: `{"errorMessage": "User not found"}`
 
-so the check becomes `return "Id" not in data`. every platform is different — just find the pattern.
+so the check becomes `return "Id" not in data`. every platform is different, just find the pattern.
 
 ## examples
 
