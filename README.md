@@ -80,3 +80,8 @@ this tool interacts with platform apis. by using it, you acknowledge that:
 - the author is not responsible for any bans, penalties, or legal action resulting from the use of this tool
 - use it at your own risk
 - script takes around 2-4 hours to complete, but rate limits can delay this severely if you don't have proxies
+
+## if this helped you get a clean username, consider donating!
+```
+buymeacoffee.com/ba0v
+```
